@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 
-import { ServerlessFunctionService } from 'src/engine/metadata-modules/serverless-function/serverless-function.service';
 import { ScopedWorkspaceContextFactory } from 'src/engine/twenty-orm/factories/scoped-workspace-context.factory';
 import { WorkflowActionResult } from 'src/modules/workflow/workflow-executor/types/workflow-action-result.type';
 import { WorkflowCodeStep } from 'src/modules/workflow/workflow-executor/types/workflow-action.type';
@@ -8,11 +7,12 @@ import {
   WorkflowStepExecutorException,
   WorkflowStepExecutorExceptionCode,
 } from 'src/modules/workflow/workflow-executor/exceptions/workflow-step-executor.exception';
+import { ServerlessFunctionWorkspaceService } from 'src/modules/serverless/workspace-services/serverless-function.workspace-service';
 
 @Injectable()
 export class CodeWorkflowAction {
   constructor(
-    private readonly serverlessFunctionService: ServerlessFunctionService,
+    private readonly serverlessFunctionWorkspaceService: ServerlessFunctionWorkspaceService,
     private readonly scopedWorkspaceContextFactory: ScopedWorkspaceContextFactory,
   ) {}
 
@@ -33,7 +33,7 @@ export class CodeWorkflowAction {
     }
 
     const result =
-      await this.serverlessFunctionService.executeOneServerlessFunction(
+      await this.serverlessFunctionWorkspaceService.executeOneServerlessFunction(
         step.settings.serverlessFunctionId,
         workspaceId,
         payload || {},

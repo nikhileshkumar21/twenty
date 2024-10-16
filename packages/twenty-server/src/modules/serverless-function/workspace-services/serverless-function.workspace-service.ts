@@ -20,15 +20,15 @@ import { EnvironmentService } from 'src/engine/core-modules/environment/environm
 import {
   ServerlessFunctionException,
   ServerlessFunctionExceptionCode,
-} from 'src/engine/metadata-modules/serverless-function/serverless-function.exception';
+} from 'src/modules/serverless/exceptions/serverless-function.exception';
 import { getServerlessFolder } from 'src/engine/core-modules/serverless/utils/serverless-get-folder.utils';
 import { INDEX_FILE_NAME } from 'src/engine/core-modules/serverless/drivers/constants/index-file-name';
 import { ENV_FILE_NAME } from 'src/engine/core-modules/serverless/drivers/constants/env-file-name';
 import { readFileContent } from 'src/engine/core-modules/file-storage/utils/read-file-content';
 import { isDefined } from 'src/utils/is-defined';
-import { UpdateServerlessFunctionInput } from 'src/engine/metadata-modules/serverless-function/dtos/update-serverless-function.input';
+import { UpdateServerlessFunctionInput } from 'src/modules/serverless/dtos/update-serverless-function.input';
 import { getLastLayerDependencies } from 'src/engine/core-modules/serverless/drivers/utils/get-last-layer-dependencies';
-import { CreateServerlessFunctionInput } from 'src/engine/metadata-modules/serverless-function/dtos/create-serverless-function.input';
+import { CreateServerlessFunctionInput } from 'src/modules/serverless/dtos/create-serverless-function.input';
 import { LAST_LAYER_VERSION } from 'src/engine/core-modules/serverless/drivers/layers/last-layer-version';
 import { getBaseTypescriptProjectFiles } from 'src/engine/core-modules/serverless/drivers/utils/get-base-typescript-project-files';
 import { TwentyORMManager } from 'src/engine/twenty-orm/twenty-orm.manager';

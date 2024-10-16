@@ -40,11 +40,11 @@ import {
 } from 'src/engine/core-modules/serverless/drivers/utils/lambda-build-directory-manager';
 import { FileStorageService } from 'src/engine/core-modules/file-storage/file-storage.service';
 import { createZipFile } from 'src/engine/core-modules/serverless/drivers/utils/create-zip-file';
-import { ServerlessFunctionExecutionStatus } from 'src/engine/metadata-modules/serverless-function/dtos/serverless-function-execution-result.dto';
+import { ServerlessFunctionExecutionStatus } from 'src/modules/serverless/dtos/serverless-function-execution-result.dto';
 import {
   ServerlessFunctionException,
   ServerlessFunctionExceptionCode,
-} from 'src/engine/metadata-modules/serverless-function/serverless-function.exception';
+} from 'src/modules/serverless/exceptions/serverless-function.exception';
 import { isDefined } from 'src/utils/is-defined';
 import { COMMON_LAYER_NAME } from 'src/engine/core-modules/serverless/drivers/constants/common-layer-name';
 import { copyAndBuildDependencies } from 'src/engine/core-modules/serverless/drivers/utils/copy-and-build-dependencies';
