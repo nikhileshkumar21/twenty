@@ -1,4 +1,4 @@
-import { ServerlessFunctionExecutionStatus } from 'src/modules/serverless/dtos/serverless-function-execution-result.dto';
+import { ServerlessFunctionExecutionStatus } from 'src/modules/serverless-function/dtos/serverless-function-execution-result.dto';
 import { Runtime } from 'src/engine/core-modules/serverless/drivers/enums/runtime.enum';
 
 export type ServerlessExecuteError = {

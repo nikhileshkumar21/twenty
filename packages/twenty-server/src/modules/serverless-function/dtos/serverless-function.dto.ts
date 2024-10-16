@@ -19,7 +19,7 @@ import {
 } from 'class-validator';
 
 import { UUIDScalarType } from 'src/engine/api/graphql/workspace-schema-builder/graphql-types/scalars';
-import { ServerlessFunctionSyncStatus } from 'src/engine/metadata-modules/serverless-function/serverless-function.entity';
+import { ServerlessFunctionSyncStatus } from 'src/modules/serverless-function/standard-objects/serverless-function.workspace-entity';
 
 registerEnumType(ServerlessFunctionSyncStatus, {
   name: 'ServerlessFunctionSyncStatus',

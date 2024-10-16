@@ -7,7 +7,7 @@ import {
   WorkflowStepExecutorException,
   WorkflowStepExecutorExceptionCode,
 } from 'src/modules/workflow/workflow-executor/exceptions/workflow-step-executor.exception';
-import { CodeWorkflowAction } from 'src/modules/serverless/workflow-actions/code.workflow-action';
+import { CodeWorkflowAction } from 'src/modules/serverless-function/workflow-actions/code.workflow-action';
 import { SendEmailWorkflowAction } from 'src/modules/mail-sender/workflow-actions/send-email.workflow-action';
 
 @Injectable()

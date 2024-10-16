@@ -10,20 +10,20 @@ import { FeatureFlagEntity } from 'src/engine/core-modules/feature-flag/feature-
 import { Workspace } from 'src/engine/core-modules/workspace/workspace.entity';
 import { AuthWorkspace } from 'src/engine/decorators/auth/auth-workspace.decorator';
 import { WorkspaceAuthGuard } from 'src/engine/guards/workspace-auth.guard';
-import { CreateServerlessFunctionInput } from 'src/modules/serverless/dtos/create-serverless-function.input';
-import { DeleteServerlessFunctionInput } from 'src/modules/serverless/dtos/delete-serverless-function.input';
-import { ExecuteServerlessFunctionInput } from 'src/modules/serverless/dtos/execute-serverless-function.input';
-import { GetServerlessFunctionSourceCodeInput } from 'src/modules/serverless/dtos/get-serverless-function-source-code.input';
-import { PublishServerlessFunctionInput } from 'src/modules/serverless/dtos/publish-serverless-function.input';
-import { ServerlessFunctionExecutionResultDTO } from 'src/modules/serverless/dtos/serverless-function-execution-result.dto';
-import { ServerlessFunctionDTO } from 'src/modules/serverless/dtos/serverless-function.dto';
-import { UpdateServerlessFunctionInput } from 'src/modules/serverless/dtos/update-serverless-function.input';
+import { CreateServerlessFunctionInput } from 'src/modules/serverless-function/dtos/create-serverless-function.input';
+import { DeleteServerlessFunctionInput } from 'src/modules/serverless-function/dtos/delete-serverless-function.input';
+import { ExecuteServerlessFunctionInput } from 'src/modules/serverless-function/dtos/execute-serverless-function.input';
+import { GetServerlessFunctionSourceCodeInput } from 'src/modules/serverless-function/dtos/get-serverless-function-source-code.input';
+import { PublishServerlessFunctionInput } from 'src/modules/serverless-function/dtos/publish-serverless-function.input';
+import { ServerlessFunctionExecutionResultDTO } from 'src/modules/serverless-function/dtos/serverless-function-execution-result.dto';
+import { ServerlessFunctionDTO } from 'src/modules/serverless-function/dtos/serverless-function.dto';
+import { UpdateServerlessFunctionInput } from 'src/modules/serverless-function/dtos/update-serverless-function.input';
 import {
   ServerlessFunctionException,
   ServerlessFunctionExceptionCode,
-} from 'src/modules/serverless/exceptions/serverless-function.exception';
-import { ServerlessFunctionGraphqlApiExceptionFilter } from 'src/modules/serverless/filters/serverless-function-graphql-api-exception.filter';
-import { ServerlessFunctionWorkspaceService } from 'src/modules/serverless/workspace-services/serverless-function.workspace-service';
+} from 'src/modules/serverless-function/exceptions/serverless-function.exception';
+import { ServerlessFunctionGraphqlApiExceptionFilter } from 'src/modules/serverless-function/filters/serverless-function-graphql-api-exception.filter';
+import { ServerlessFunctionWorkspaceService } from 'src/modules/serverless-function/workspace-services/serverless-function.workspace-service';
 
 @Resolver()
 @UseGuards(WorkspaceAuthGuard)

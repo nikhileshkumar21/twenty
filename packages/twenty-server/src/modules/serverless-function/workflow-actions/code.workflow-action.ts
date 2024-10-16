@@ -7,7 +7,7 @@ import {
   WorkflowStepExecutorException,
   WorkflowStepExecutorExceptionCode,
 } from 'src/modules/workflow/workflow-executor/exceptions/workflow-step-executor.exception';
-import { ServerlessFunctionWorkspaceService } from 'src/modules/serverless/workspace-services/serverless-function.workspace-service';
+import { ServerlessFunctionWorkspaceService } from 'src/modules/serverless-function/workspace-services/serverless-function.workspace-service';
 
 @Injectable()
 export class CodeWorkflowAction {

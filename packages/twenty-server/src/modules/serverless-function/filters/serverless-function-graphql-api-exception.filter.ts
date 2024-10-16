@@ -3,7 +3,7 @@ import { Catch, ExceptionFilter } from '@nestjs/common';
 import {
   ServerlessFunctionException,
   ServerlessFunctionExceptionCode,
-} from 'src/modules/serverless/exceptions/serverless-function.exception';
+} from 'src/modules/serverless-function/exceptions/serverless-function.exception';
 import {
   ConflictError,
   ForbiddenError,
