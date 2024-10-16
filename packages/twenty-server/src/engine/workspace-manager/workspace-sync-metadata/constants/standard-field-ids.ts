@@ -407,6 +407,15 @@ export const WORKFLOW_EVENT_LISTENER_STANDARD_FIELD_IDS = {
   workflow: '20202020-4082-4641-8569-dc08d5365002',
 };
 
+export const SERVERLESS_FUNCTION_STANDARD_FIELD_IDS = {
+  name: '20202020-b3d3-478f-acc0-6d901e725b20',
+  description: '20202020-b3d3-478f-acc0-6d901e725b21',
+  latestVersion: '20202020-b3d3-478f-acc0-6d901e725b22',
+  runtime: '20202020-b3d3-478f-acc0-6d901e725b23',
+  layerVersion: '20202020-b3d3-478f-acc0-6d901e725b24',
+  syncStatus: '20202020-b3d3-478f-acc0-6d901e725b25',
+};
+
 export const WORKFLOW_STANDARD_FIELD_IDS = {
   name: '20202020-b3d3-478f-acc0-5d901e725b20',
   lastPublishedVersionId: '20202020-326a-4fba-8639-3456c0a169e8',

@@ -2,22 +2,23 @@ import { join } from 'path';
 
 import { FileFolder } from 'src/engine/core-modules/file/interfaces/file-folder.interface';
 
-import { ServerlessFunctionEntity } from 'src/engine/metadata-modules/serverless-function/serverless-function.entity';
-
 export const getServerlessFolder = ({
-  serverlessFunction,
-  version,
+  workspaceId,
+  serverlessFunctionId,
+  serverlessFunctionVersion,
 }: {
-  serverlessFunction: ServerlessFunctionEntity;
-  version?: string;
+  workspaceId: string;
+  serverlessFunctionId: string;
+  serverlessFunctionVersion?: string | null;
 }) => {
-  const computedVersion =
-    version === 'latest' ? serverlessFunction.latestVersion : version;
+  if (serverlessFunctionVersion === 'latest') {
+    throw new Error('cannot support "latest" version');
+  }
 
   return join(
-    'workspace-' + serverlessFunction.workspaceId,
+    'workspace-' + workspaceId,
     FileFolder.ServerlessFunction,
-    serverlessFunction.id,
-    computedVersion || '',
+    serverlessFunctionId,
+    serverlessFunctionVersion || '',
   );
 };

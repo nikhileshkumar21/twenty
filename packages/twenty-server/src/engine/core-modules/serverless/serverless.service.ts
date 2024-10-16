@@ -6,32 +6,41 @@ import {
 } from 'src/engine/core-modules/serverless/drivers/interfaces/serverless-driver.interface';
 
 import { SERVERLESS_DRIVER } from 'src/engine/core-modules/serverless/serverless.constants';
-import { ServerlessFunctionEntity } from 'src/engine/metadata-modules/serverless-function/serverless-function.entity';
+import { Runtime } from 'src/engine/core-modules/serverless/drivers/enums/runtime.enum';
 
 @Injectable()
 export class ServerlessService implements ServerlessDriver {
   constructor(@Inject(SERVERLESS_DRIVER) private driver: ServerlessDriver) {}
 
-  async delete(serverlessFunction: ServerlessFunctionEntity): Promise<void> {
-    return this.driver.delete(serverlessFunction);
+  async delete(serverlessFunctionId: string): Promise<void> {
+    return this.driver.delete(serverlessFunctionId);
   }
 
-  async build(
-    serverlessFunction: ServerlessFunctionEntity,
-    version: string,
-  ): Promise<void> {
-    return this.driver.build(serverlessFunction, version);
+  async build(params: {
+    workspaceId: string;
+    serverlessFunctionId: string;
+    serverlessFunctionVersion: string;
+    layerVersion: number | null;
+    runtime: Runtime;
+  }): Promise<void> {
+    return this.driver.build(params);
   }
 
-  async publish(serverlessFunction: ServerlessFunctionEntity): Promise<string> {
-    return this.driver.publish(serverlessFunction);
+  async publish(params: {
+    workspaceId: string;
+    serverlessFunctionId: string;
+    currentServerlessFunctionVersion: string | null;
+    layerVersion: number | null;
+    runtime: Runtime;
+  }): Promise<string> {
+    return this.driver.publish(params);
   }
 
-  async execute(
-    serverlessFunction: ServerlessFunctionEntity,
-    payload: object,
-    version: string,
-  ): Promise<ServerlessExecuteResult> {
-    return this.driver.execute(serverlessFunction, payload, version);
+  async execute(params: {
+    serverlessFunctionId: string;
+    serverlessFunctionVersion: string;
+    payload: object;
+  }): Promise<ServerlessExecuteResult> {
+    return this.driver.execute(params);
   }
 }

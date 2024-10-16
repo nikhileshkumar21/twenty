@@ -20,6 +20,7 @@ import { SERVERLESS_TMPDIR_FOLDER } from 'src/engine/core-modules/serverless/dri
 import { compileTypescript } from 'src/engine/core-modules/serverless/drivers/utils/compile-typescript';
 import { OUTDIR_FOLDER } from 'src/engine/core-modules/serverless/drivers/constants/outdir-folder';
 import { ENV_FILE_NAME } from 'src/engine/core-modules/serverless/drivers/constants/env-file-name';
+import { Runtime } from 'src/engine/core-modules/serverless/drivers/enums/runtime.enum';
 
 const LISTENER_FILE_NAME = 'listener.js';
 
@@ -35,10 +36,10 @@ export class LocalDriver implements ServerlessDriver {
   }
 
   private getInMemoryServerlessFunctionFolderPath = (
-    serverlessFunction: ServerlessFunctionEntity,
+    serverlessFunctionId: string,
     version: string,
   ) => {
-    return join(SERVERLESS_TMPDIR_FOLDER, serverlessFunction.id, version);
+    return join(SERVERLESS_TMPDIR_FOLDER, serverlessFunctionId, version);
   };
 
   private getInMemoryLayerFolderPath = (version: number) => {
@@ -58,21 +59,35 @@ export class LocalDriver implements ServerlessDriver {
 
   async delete() {}
 
-  async build(serverlessFunction: ServerlessFunctionEntity, version: string) {
-    const computedVersion =
-      version === 'latest' ? serverlessFunction.latestVersion : version;
+  async build({
+    workspaceId,
+    serverlessFunctionId,
+    serverlessFunctionVersion,
+    layerVersion,
+  }: {
+    workspaceId: string;
+    serverlessFunctionId: string;
+    serverlessFunctionVersion: string;
+    layerVersion: number | null;
+  }) {
+    if (serverlessFunctionVersion === 'latest') {
+      throw new Error('cannot support "latest" version');
+    }
 
-    await this.createLayerIfNotExists(serverlessFunction.layerVersion);
+    if (layerVersion) {
+      await this.createLayerIfNotExists(layerVersion);
+    }
 
     const inMemoryServerlessFunctionFolderPath =
       this.getInMemoryServerlessFunctionFolderPath(
-        serverlessFunction,
-        computedVersion,
+        serverlessFunctionId,
+        serverlessFunctionVersion,
       );
 
     const folderPath = getServerlessFolder({
-      serverlessFunction,
-      version,
+      workspaceId,
+      serverlessFunctionId: serverlessFunctionId,
+      serverlessFunctionVersion,
     });
 
     await this.fileStorageService.download({
@@ -117,38 +132,49 @@ export class LocalDriver implements ServerlessDriver {
       listener,
     );
 
-    try {
-      await fs.symlink(
-        join(
-          this.getInMemoryLayerFolderPath(serverlessFunction.layerVersion),
-          'node_modules',
-        ),
-        join(
-          inMemoryServerlessFunctionFolderPath,
-          OUTDIR_FOLDER,
-          'node_modules',
-        ),
-        'dir',
-      );
-    } catch (err) {
-      if (err.code !== 'EEXIST') {
-        throw err;
+    if (layerVersion) {
+      try {
+        await fs.symlink(
+          join(this.getInMemoryLayerFolderPath(layerVersion), 'node_modules'),
+          join(
+            inMemoryServerlessFunctionFolderPath,
+            OUTDIR_FOLDER,
+            'node_modules',
+          ),
+          'dir',
+        );
+      } catch (err) {
+        if (err.code !== 'EEXIST') {
+          throw err;
+        }
       }
     }
   }
 
-  async publish(serverlessFunction: ServerlessFunctionEntity) {
-    const newVersion = serverlessFunction.latestVersion
-      ? `${parseInt(serverlessFunction.latestVersion, 10) + 1}`
+  async publish({
+    workspaceId,
+    serverlessFunctionId,
+    currentServerlessFunctionVersion,
+    layerVersion,
+  }: {
+    workspaceId: string;
+    serverlessFunctionId: string;
+    currentServerlessFunctionVersion: string | null;
+    layerVersion: number | null;
+  }) {
+    const newVersion = currentServerlessFunctionVersion
+      ? `${parseInt(currentServerlessFunctionVersion, 10) + 1}`
       : '1';
 
     const draftFolderPath = getServerlessFolder({
-      serverlessFunction: serverlessFunction,
-      version: 'draft',
+      workspaceId,
+      serverlessFunctionId,
+      serverlessFunctionVersion: 'draft',
     });
     const newFolderPath = getServerlessFolder({
-      serverlessFunction: serverlessFunction,
-      version: newVersion,
+      workspaceId,
+      serverlessFunctionId,
+      serverlessFunctionVersion: newVersion,
     });
 
     await this.fileStorageService.copy({
@@ -156,24 +182,35 @@ export class LocalDriver implements ServerlessDriver {
       to: { folderPath: newFolderPath },
     });
 
-    await this.build(serverlessFunction, newVersion);
+    await this.build({
+      workspaceId,
+      serverlessFunctionId,
+      serverlessFunctionVersion: newVersion,
+      layerVersion,
+    });
 
     return newVersion;
   }
 
-  async execute(
-    serverlessFunction: ServerlessFunctionEntity,
-    payload: object,
-    version: string,
-  ): Promise<ServerlessExecuteResult> {
+  async execute({
+    serverlessFunctionId,
+    serverlessFunctionVersion,
+    payload,
+  }: {
+    serverlessFunctionId: string;
+    serverlessFunctionVersion: string;
+    payload: object;
+  }): Promise<ServerlessExecuteResult> {
+    if (serverlessFunctionVersion === 'latest') {
+      throw new Error('cannot support "latest" version');
+    }
+
     const startTime = Date.now();
-    const computedVersion =
-      version === 'latest' ? serverlessFunction.latestVersion : version;
 
     const listenerFile = join(
       this.getInMemoryServerlessFunctionFolderPath(
-        serverlessFunction,
-        computedVersion,
+        serverlessFunctionId,
+        serverlessFunctionVersion,
       ),
       OUTDIR_FOLDER,
       LISTENER_FILE_NAME,

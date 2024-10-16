@@ -1,5 +1,5 @@
-import { ServerlessFunctionEntity } from 'src/engine/metadata-modules/serverless-function/serverless-function.entity';
 import { ServerlessFunctionExecutionStatus } from 'src/engine/metadata-modules/serverless-function/dtos/serverless-function-execution-result.dto';
+import { Runtime } from 'src/engine/core-modules/serverless/drivers/enums/runtime.enum';
 
 export type ServerlessExecuteError = {
   errorType: string;
@@ -15,15 +15,24 @@ export type ServerlessExecuteResult = {
 };
 
 export interface ServerlessDriver {
-  delete(serverlessFunction: ServerlessFunctionEntity): Promise<void>;
-  build(
-    serverlessFunction: ServerlessFunctionEntity,
-    version: string,
-  ): Promise<void>;
-  publish(serverlessFunction: ServerlessFunctionEntity): Promise<string>;
-  execute(
-    serverlessFunction: ServerlessFunctionEntity,
-    payload: object,
-    version: string,
-  ): Promise<ServerlessExecuteResult>;
+  delete(serverlessFunctionId: string): Promise<void>;
+  build(params: {
+    workspaceId: string;
+    serverlessFunctionId: string;
+    serverlessFunctionVersion: string;
+    layerVersion: number | null;
+    runtime: Runtime;
+  }): Promise<void>;
+  publish(params: {
+    workspaceId: string;
+    serverlessFunctionId: string;
+    currentServerlessFunctionVersion: string | null;
+    layerVersion: number | null;
+    runtime: Runtime;
+  }): Promise<string>;
+  execute(params: {
+    serverlessFunctionId: string;
+    serverlessFunctionVersion: string;
+    payload: object;
+  }): Promise<ServerlessExecuteResult>;
 }

@@ -53,12 +53,15 @@ import { SERVERLESS_TMPDIR_FOLDER } from 'src/engine/core-modules/serverless/dri
 import { compileTypescript } from 'src/engine/core-modules/serverless/drivers/utils/compile-typescript';
 import { ENV_FILE_NAME } from 'src/engine/core-modules/serverless/drivers/constants/env-file-name';
 import { OUTDIR_FOLDER } from 'src/engine/core-modules/serverless/drivers/constants/outdir-folder';
+import { Runtime } from 'src/engine/core-modules/serverless/drivers/enums/runtime.enum';
 
 export interface LambdaDriverOptions extends LambdaClientConfig {
   fileStorageService: FileStorageService;
   region: string;
   role: string;
 }
+
+const MAX_WAIT_TIME = 20;
 
 export class LambdaDriver implements ServerlessDriver {
   private readonly lambdaClient: Lambda;
@@ -154,14 +157,14 @@ export class LambdaDriver implements ServerlessDriver {
     }
   }
 
-  async delete(serverlessFunction: ServerlessFunctionEntity) {
+  async delete(serverlessFunctionName: string) {
     const functionExists = await this.checkFunctionExists(
-      serverlessFunction.id,
+      serverlessFunctionName,
     );
 
     if (functionExists) {
       const deleteFunctionCommand = new DeleteFunctionCommand({
-        FunctionName: serverlessFunction.id,
+        FunctionName: serverlessFunctionName,
       });
 
       await this.lambdaClient.send(deleteFunctionCommand);
@@ -169,25 +172,39 @@ export class LambdaDriver implements ServerlessDriver {
   }
 
   private getInMemoryServerlessFunctionFolderPath = (
-    serverlessFunction: ServerlessFunctionEntity,
+    serverlessFunctionId: string,
     version: string,
   ) => {
-    return join(SERVERLESS_TMPDIR_FOLDER, serverlessFunction.id, version);
+    return join(SERVERLESS_TMPDIR_FOLDER, serverlessFunctionId, version);
   };
 
-  async build(serverlessFunction: ServerlessFunctionEntity, version: string) {
-    const computedVersion =
-      version === 'latest' ? serverlessFunction.latestVersion : version;
+  async build({
+    workspaceId,
+    serverlessFunctionId,
+    serverlessFunctionVersion,
+    layerVersion,
+    runtime,
+  }: {
+    workspaceId: string;
+    serverlessFunctionId: string;
+    serverlessFunctionVersion: string;
+    layerVersion: number | null;
+    runtime: Runtime;
+  }) {
+    if (serverlessFunctionVersion === 'latest') {
+      throw new Error('cannot support "latest" version');
+    }
 
     const inMemoryServerlessFunctionFolderPath =
       this.getInMemoryServerlessFunctionFolderPath(
-        serverlessFunction,
-        computedVersion,
+        serverlessFunctionId,
+        serverlessFunctionVersion,
       );
 
     const folderPath = getServerlessFolder({
-      serverlessFunction,
-      version,
+      workspaceId,
+      serverlessFunctionId: serverlessFunctionId,
+      serverlessFunctionVersion,
     });
 
     await this.fileStorageService.download({
@@ -213,27 +230,27 @@ export class LambdaDriver implements ServerlessDriver {
 
     const envVariables = dotenv.parse(envFileContent);
 
-    const functionExists = await this.checkFunctionExists(
-      serverlessFunction.id,
-    );
+    const functionExists = await this.checkFunctionExists(serverlessFunctionId);
 
     if (!functionExists) {
-      const layerArn = await this.createLayerIfNotExists(
-        serverlessFunction.layerVersion,
-      );
+      const layers: string[] = [];
+
+      if (layerVersion) {
+        layers.push(await this.createLayerIfNotExists(layerVersion));
+      }
 
       const params: CreateFunctionCommandInput = {
         Code: {
           ZipFile: await fs.readFile(lambdaZipPath),
         },
-        FunctionName: serverlessFunction.id,
+        FunctionName: serverlessFunctionId,
         Handler: 'src/index.handler',
-        Layers: [layerArn],
+        Layers: layers,
         Environment: {
           Variables: envVariables,
         },
         Role: this.lambdaRole,
-        Runtime: serverlessFunction.runtime,
+        Runtime: runtime,
         Description: 'Lambda function to run user script',
         Timeout: 900,
       };
@@ -244,7 +261,7 @@ export class LambdaDriver implements ServerlessDriver {
     } else {
       const updateCodeParams: UpdateFunctionCodeCommandInput = {
         ZipFile: await fs.readFile(lambdaZipPath),
-        FunctionName: serverlessFunction.id,
+        FunctionName: serverlessFunctionId,
       };
 
       const updateCodeCommand = new UpdateFunctionCodeCommand(updateCodeParams);
@@ -256,25 +273,42 @@ export class LambdaDriver implements ServerlessDriver {
           Environment: {
             Variables: envVariables,
           },
-          FunctionName: serverlessFunction.id,
+          FunctionName: serverlessFunctionId,
         };
 
       const updateConfigurationCommand = new UpdateFunctionConfigurationCommand(
         updateConfigurationParams,
       );
 
-      await this.waitFunctionUpdates(serverlessFunction.id, 10);
+      await this.waitFunctionUpdates(serverlessFunctionId, MAX_WAIT_TIME);
 
       await this.lambdaClient.send(updateConfigurationCommand);
     }
 
-    await this.waitFunctionUpdates(serverlessFunction.id, 10);
+    await this.waitFunctionUpdates(serverlessFunctionId, MAX_WAIT_TIME);
   }
 
-  async publish(serverlessFunction: ServerlessFunctionEntity) {
-    await this.build(serverlessFunction, 'draft');
+  async publish({
+    workspaceId,
+    serverlessFunctionId,
+    layerVersion,
+    runtime,
+  }: {
+    workspaceId: string;
+    serverlessFunctionId: string;
+    layerVersion: number | null;
+    runtime: Runtime;
+  }) {
+    await this.build({
+      workspaceId,
+      serverlessFunctionId,
+      serverlessFunctionVersion: 'draft',
+      layerVersion,
+      runtime,
+    });
+
     const params: PublishVersionCommandInput = {
-      FunctionName: serverlessFunction.id,
+      FunctionName: serverlessFunctionId,
     };
 
     const command = new PublishVersionCommand(params);
@@ -287,12 +321,14 @@ export class LambdaDriver implements ServerlessDriver {
     }
 
     const draftFolderPath = getServerlessFolder({
-      serverlessFunction: serverlessFunction,
-      version: 'draft',
+      workspaceId,
+      serverlessFunctionId,
+      serverlessFunctionVersion: 'draft',
     });
     const newFolderPath = getServerlessFolder({
-      serverlessFunction: serverlessFunction,
-      version: newVersion,
+      workspaceId,
+      serverlessFunctionId,
+      serverlessFunctionVersion: newVersion,
     });
 
     await this.fileStorageService.copy({
@@ -303,20 +339,25 @@ export class LambdaDriver implements ServerlessDriver {
     return newVersion;
   }
 
-  async execute(
-    functionToExecute: ServerlessFunctionEntity,
-    payload: object,
-    version: string,
-  ): Promise<ServerlessExecuteResult> {
-    const computedVersion =
-      version === 'latest' ? functionToExecute.latestVersion : version;
+  async execute({
+    serverlessFunctionId,
+    serverlessFunctionVersion,
+    payload,
+  }: {
+    serverlessFunctionId: string;
+    serverlessFunctionVersion: string;
+    payload: object;
+  }): Promise<ServerlessExecuteResult> {
+    if (serverlessFunctionVersion === 'latest') {
+      throw new Error('cannot support "latest" version');
+    }
 
     const functionName =
-      computedVersion === 'draft'
-        ? functionToExecute.id
-        : `${functionToExecute.id}:${computedVersion}`;
+      serverlessFunctionVersion === 'draft'
+        ? serverlessFunctionId
+        : `${serverlessFunctionId}:${serverlessFunctionVersion}`;
 
-    await this.waitFunctionUpdates(functionToExecute.id, 10);
+    await this.waitFunctionUpdates(serverlessFunctionId, MAX_WAIT_TIME);
 
     const startTime = Date.now();
     const params: InvokeCommandInput = {
@@ -352,7 +393,7 @@ export class LambdaDriver implements ServerlessDriver {
     } catch (error) {
       if (error instanceof ResourceNotFoundException) {
         throw new ServerlessFunctionException(
-          `Function Version '${version}' does not exist`,
+          `Function Version '${serverlessFunctionVersion}' does not exist`,
           ServerlessFunctionExceptionCode.SERVERLESS_FUNCTION_NOT_FOUND,
         );
       }
