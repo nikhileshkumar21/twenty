@@ -145,8 +145,7 @@ export const ShowPageRightContainer = ({
     targetableObject.targetObjectNameSingular ===
       CoreObjectNameSingular.WorkflowRun;
 
-  const hideTabsNotWorkflowRelated =
-    isWorkflow || isWorkflowVersion || isWorkflowRun;
+  const isWorkflowRelated = isWorkflow || isWorkflowVersion || isWorkflowRun;
 
   const shouldDisplayCalendarTab = isCompanyOrPerson;
   const shouldDisplayEmailsTab = emails && isCompanyOrPerson;
@@ -179,7 +178,7 @@ export const ShowPageRightContainer = ({
       id: 'timeline',
       title: 'Timeline',
       Icon: IconTimelineEvent,
-      hide: !timeline || isInRightDrawer || hideTabsNotWorkflowRelated,
+      hide: !timeline || isInRightDrawer || isWorkflowRelated,
     },
     {
       id: 'tasks',
@@ -191,7 +190,7 @@ export const ShowPageRightContainer = ({
           CoreObjectNameSingular.Note ||
         targetableObject.targetObjectNameSingular ===
           CoreObjectNameSingular.Task ||
-        hideTabsNotWorkflowRelated,
+        isWorkflowRelated,
     },
     {
       id: 'notes',
@@ -203,13 +202,13 @@ export const ShowPageRightContainer = ({
           CoreObjectNameSingular.Note ||
         targetableObject.targetObjectNameSingular ===
           CoreObjectNameSingular.Task ||
-        hideTabsNotWorkflowRelated,
+        isWorkflowRelated,
     },
     {
       id: 'files',
       title: 'Files',
       Icon: IconPaperclip,
-      hide: !notes || hideTabsNotWorkflowRelated,
+      hide: !notes || isWorkflowRelated,
     },
     {
       id: 'emails',
